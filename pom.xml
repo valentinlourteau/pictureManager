@@ -24,6 +24,12 @@
 			<version>2.0-PFD2</version>
 		</dependency>
 
+		<!-- https://mvnrepository.com/artifact/org.imgscalr/imgscalr-lib -->
+		<dependency>
+			<groupId>org.imgscalr</groupId>
+			<artifactId>imgscalr-lib</artifactId>
+			<version>4.2</version>
+		</dependency>
 
 	</dependencies>
 
@@ -31,13 +37,14 @@
 		<finalName>API</finalName>
 
 		<sourceDirectory>src</sourceDirectory>
-		<resources>
+		<resources>			
 			<resource>
-				<directory>src</directory>
-				<includes>
-					<include>META-INF/persistence.xml</include>
-				</includes>
-			</resource>
+            <directory>src/main/resources</directory>
+            <includes>
+                <include>**/*.properties</include>
+            </includes>
+        </resource>
+			
 		</resources>
 		<plugins>
 			<plugin>
