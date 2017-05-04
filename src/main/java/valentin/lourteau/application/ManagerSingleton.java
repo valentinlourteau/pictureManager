@@ -7,6 +7,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -45,14 +46,14 @@ public class ManagerSingleton {
 	private String pathToPicturesFolder;
 	private Long fileCount = 0L;
 	private List<String> desiredFormats;
-	
+
 	@PostConstruct
-	public void start() throws IOException{
+	public void start() throws IOException {
 		loadProperties();
 		scheduledTaskToMinifyPictures();
 	}
 
-//	@Schedule(hour = "2", persistent = false)
+	// @Schedule(hour = "2", persistent = false)
 	private void scheduledTaskToMinifyPictures() throws IOException {
 
 		if (fileCount.equals(countNumberOfFilesInFolder())) {
@@ -63,7 +64,7 @@ public class ManagerSingleton {
 		logger.log(Level.INFO, "Nombre d'images à process : " + toProcess.size());
 		newBatch(toProcess);
 	}
-	
+
 	private void loadProperties() {
 		pathToPicturesFolder = PropertiesReader.getPropertie("pathToPicturesFolder");
 		logger.log(Level.INFO, pathToPicturesFolder);
@@ -87,13 +88,20 @@ public class ManagerSingleton {
 	 */
 	private void processFile(File file) {
 		desiredFormats.forEach(format -> {
-			File duplicate = new File(pathToPicturesFolder + file.getName().split("\\.")[0] + format + PROCESSED_SUFFIX
+			FileOutputStream os = null;
+			File duplicate = new File(pathToPicturesFolder + file.getName().split("\\.")[0] + "_" + format + PROCESSED_SUFFIX
 					+ file.getName().split("\\.")[1]);
-			System.out.println("Chemin absolu du fichier : " + duplicate.getAbsolutePath());
-		    System.out.println("Nom du fichier : " + duplicate.getName());
-		    System.out.println("Est-ce qu'il existe ? " + duplicate.exists());
-		    System.out.println("Est-ce un répertoire ? " + duplicate.isDirectory());
-		    System.out.println("Est-ce un fichier ? " + duplicate.isFile());
+			try {
+				os = new FileOutputStream(duplicate);
+			} catch (Exception e1) {
+				e1.printStackTrace();
+			}
+			try {
+				Files.copy(file.toPath(), os);
+				os.close();
+			} catch (Exception e1) {
+				e1.printStackTrace();
+			}
 			try {
 				processImage(duplicate, format);
 			} catch (Exception e) {
@@ -105,7 +113,8 @@ public class ManagerSingleton {
 	private void processImage(File file, String format) throws IOException {
 		BufferedImage resizeMe = ImageIO.read(file);
 		Dimension newMaxSize = getDimension(format);
-		BufferedImage resizedImg = Scalr.resize(resizeMe, Method.SPEED, newMaxSize.width, newMaxSize.height);
+		BufferedImage resizedImg = Scalr.resize(resizeMe, Method.QUALITY, newMaxSize.width, newMaxSize.height);
+		ImageIO.write(resizedImg, file.getName().split("\\.")[file.getName().split("\\.").length - 1], file);
 	}
 
 	private Dimension getDimension(String format) {
